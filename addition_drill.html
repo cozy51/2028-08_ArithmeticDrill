@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>足し算ドリル</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+  }
+
+  .card {
+    background: #ffffff;
+    width: 90%;
+    max-width: 420px;
+    padding: 40px 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 22px;
+    color: #4a6fa5;
+    margin-bottom: 28px;
+  }
+
+  .question {
+    font-size: 48px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin-bottom: 24px;
+  }
+
+  .answer-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  #answer {
+    width: 110px;
+    padding: 10px;
+    font-size: 26px;
+    text-align: center;
+    border: 2px solid #c3d0dd;
+    border-radius: 8px;
+    outline: none;
+  }
+
+  #answer:focus {
+    border-color: #4a6fa5;
+  }
+
+  button {
+    padding: 12px 28px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  button:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  #submit-btn {
+    background: #4a6fa5;
+    color: #fff;
+  }
+
+  #next-btn {
+    background: #5cb85c;
+    color: #fff;
+  }
+
+  .message {
+    min-height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 18px;
+  }
+
+  .message.correct { color: #2e9e44; }
+  .message.wrong   { color: #d9534f; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>足し算ドリル</h1>
+
+    <div class="question"><span id="num1"></span> ＋ <span id="num2"></span> = ？</div>
+
+    <div class="answer-row">
+      <input type="number" id="answer" inputmode="numeric" placeholder="答え">
+      <button id="submit-btn">答える</button>
+      <button id="next-btn" disabled>次の問題</button>
+    </div>
+
+    <div class="message" id="message"></div>
+  </div>
+
+<script>
+  const num1El     = document.getElementById("num1");
+  const num2El     = document.getElementById("num2");
+  const answerEl   = document.getElementById("answer");
+  const submitBtn  = document.getElementById("submit-btn");
+  const nextBtn    = document.getElementById("next-btn");
+  const messageEl  = document.getElementById("message");
+
+  let correctAnswer = 0;
+
+  // 1〜10のランダムな整数を返す
+  function randomNumber() {
+    return Math.floor(Math.random() * 10) + 1;
+  }
+
+  // 新しい問題を出題する
+  function newProblem() {
+    const a = randomNumber();
+    const b = randomNumber();
+    correctAnswer = a + b;
+
+    num1El.textContent = a;
+    num2El.textContent = b;
+
+    messageEl.textContent = "";
+    messageEl.className = "message";
+
+    answerEl.value = "";
+    answerEl.disabled = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+
+    answerEl.focus();
+  }
+
+  // 答え合わせ
+  function checkAnswer() {
+    const input = answerEl.value.trim();
+    if (input === "") return; // 空欄のときは何もしない
+
+    if (Number(input) === correctAnswer) {
+      messageEl.textContent = "正解！";
+      messageEl.className = "message correct";
+      // 正解したら入力を固定して「次の問題」へ
+      answerEl.disabled = true;
+      submitBtn.disabled = true;
+      nextBtn.disabled = false;
+      nextBtn.focus();
+    } else {
+      messageEl.textContent = "もう一度";
+      messageEl.className = "message wrong";
+      answerEl.select(); // 入力し直しやすくする
+    }
+  }
+
+  submitBtn.addEventListener("click", checkAnswer);
+
+  // Enterキーでも答えられるようにする
+  answerEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") checkAnswer();
+  });
+
+  nextBtn.addEventListener("click", newProblem);
+
+  newProblem();
+</script>
+</body>
+</html>
