@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>足し算ドリル</title>
+<title>足し算・引き算ドリル</title>
 <style>
   * {
     margin: 0;
@@ -45,15 +45,15 @@
   }
 
   .answer-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(90px, 110px) 1fr 1.2fr;
+    align-items: stretch;
     gap: 12px;
     margin-bottom: 20px;
   }
 
   #answer {
-    width: 110px;
+    width: 100%;
     padding: 10px;
     font-size: 26px;
     text-align: center;
@@ -67,11 +67,12 @@
   }
 
   button {
-    padding: 12px 28px;
+    padding: 12px 16px;
     font-size: 18px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    white-space: nowrap;
     transition: opacity 0.15s ease;
   }
 
@@ -103,13 +104,34 @@
 
   .message.correct { color: #2e9e44; }
   .message.wrong   { color: #d9534f; }
+
+  @media (max-width: 400px) {
+    .card {
+      padding: 32px 16px;
+    }
+
+    .answer-row {
+      grid-template-columns: minmax(72px, 90px) 1fr 1.3fr;
+      gap: 8px;
+    }
+
+    #answer {
+      font-size: 22px;
+    }
+
+    button {
+      padding: 10px 8px;
+      font-size: 16px;
+    }
+  }
+
 </style>
 </head>
 <body>
   <div class="card">
-    <h1>足し算ドリル</h1>
+    <h1>足し算・引き算ドリル</h1>
 
-    <div class="question"><span id="num1"></span> ＋ <span id="num2"></span> = ？</div>
+    <div class="question"><span id="num1"></span> <span id="operator"></span> <span id="num2"></span> = ？</div>
 
     <div class="answer-row">
       <input type="number" id="answer" inputmode="numeric" placeholder="答え">
@@ -123,6 +145,7 @@
 <script>
   const num1El     = document.getElementById("num1");
   const num2El     = document.getElementById("num2");
+  const operatorEl = document.getElementById("operator");
   const answerEl   = document.getElementById("answer");
   const submitBtn  = document.getElementById("submit-btn");
   const nextBtn    = document.getElementById("next-btn");
@@ -137,9 +160,19 @@
 
   // 新しい問題を出題する
   function newProblem() {
-    const a = randomNumber();
-    const b = randomNumber();
-    correctAnswer = a + b;
+    let a = randomNumber();
+    let b = randomNumber();
+    const isAddition = Math.random() < 0.5;
+
+    if (isAddition) {
+      operatorEl.textContent = "＋";
+      correctAnswer = a + b;
+    } else {
+      // 答えがマイナスにならないよう、大きい数を左側にする
+      if (a < b) [a, b] = [b, a];
+      operatorEl.textContent = "−";
+      correctAnswer = a - b;
+    }
 
     num1El.textContent = a;
     num2El.textContent = b;
