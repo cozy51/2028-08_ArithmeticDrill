@@ -34,7 +34,14 @@
   h1 {
     font-size: 22px;
     color: #4a6fa5;
-    margin-bottom: 28px;
+    margin-bottom: 18px;
+  }
+
+  .progress {
+    color: #718096;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 18px;
   }
 
   .question {
@@ -105,6 +112,33 @@
   .message.correct { color: #2e9e44; }
   .message.wrong   { color: #d9534f; }
 
+  .result {
+    padding-top: 8px;
+  }
+
+  .result h2 {
+    color: #4a6fa5;
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .result-score {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .result-rate {
+    color: #5f6c7b;
+    font-size: 20px;
+    margin-bottom: 28px;
+  }
+
+  #restart-btn {
+    background: #4a6fa5;
+    color: #fff;
+  }
+
   @media (max-width: 400px) {
     .card {
       padding: 32px 16px;
@@ -131,27 +165,47 @@
   <div class="card">
     <h1>足し算・引き算ドリル</h1>
 
-    <div class="question"><span id="num1"></span> <span id="operator"></span> <span id="num2"></span> = ？</div>
+    <div id="drill">
+      <div class="progress" id="progress"></div>
+      <div class="question"><span id="num1"></span> <span id="operator"></span> <span id="num2"></span> = ？</div>
 
-    <div class="answer-row">
-      <input type="number" id="answer" inputmode="numeric" placeholder="答え">
-      <button id="submit-btn">答える</button>
-      <button id="next-btn" disabled>次の問題</button>
+      <div class="answer-row">
+        <input type="number" id="answer" inputmode="numeric" placeholder="答え" aria-label="答え">
+        <button id="submit-btn">答える</button>
+        <button id="next-btn" disabled>次の問題</button>
+      </div>
+
+      <div class="message" id="message" aria-live="polite"></div>
     </div>
 
-    <div class="message" id="message"></div>
+    <div class="result" id="result" hidden>
+      <h2>結果</h2>
+      <div class="result-score" id="result-score"></div>
+      <div class="result-rate" id="result-rate"></div>
+      <button id="restart-btn">もう一度挑戦する</button>
+    </div>
   </div>
 
 <script>
   const num1El     = document.getElementById("num1");
   const num2El     = document.getElementById("num2");
   const operatorEl = document.getElementById("operator");
+  const drillEl    = document.getElementById("drill");
+  const progressEl = document.getElementById("progress");
   const answerEl   = document.getElementById("answer");
   const submitBtn  = document.getElementById("submit-btn");
   const nextBtn    = document.getElementById("next-btn");
   const messageEl  = document.getElementById("message");
+  const resultEl   = document.getElementById("result");
+  const resultScoreEl = document.getElementById("result-score");
+  const resultRateEl  = document.getElementById("result-rate");
+  const restartBtn = document.getElementById("restart-btn");
 
+  const totalQuestions = 10;
   let correctAnswer = 0;
+  let currentQuestion = 1;
+  let correctCount = 0;
+  let isFirstAttempt = true;
 
   // 1〜10のランダムな整数を返す
   function randomNumber() {
@@ -176,6 +230,8 @@
 
     num1El.textContent = a;
     num2El.textContent = b;
+    progressEl.textContent = `${currentQuestion} / ${totalQuestions} 問`;
+    isFirstAttempt = true;
 
     messageEl.textContent = "";
     messageEl.className = "message";
@@ -193,19 +249,49 @@
     const input = answerEl.value.trim();
     if (input === "") return; // 空欄のときは何もしない
 
-    if (Number(input) === correctAnswer) {
+    const isCorrect = Number(input) === correctAnswer;
+
+    if (isFirstAttempt) {
+      if (isCorrect) correctCount++;
+      isFirstAttempt = false;
+    }
+
+    if (isCorrect) {
       messageEl.textContent = "正解！";
       messageEl.className = "message correct";
-      // 正解したら入力を固定して「次の問題」へ
       answerEl.disabled = true;
       submitBtn.disabled = true;
-      nextBtn.disabled = false;
-      nextBtn.focus();
+
+      if (currentQuestion === totalQuestions) {
+        showResult();
+      } else {
+        nextBtn.disabled = false;
+        nextBtn.focus();
+      }
     } else {
       messageEl.textContent = "もう一度";
       messageEl.className = "message wrong";
       answerEl.select(); // 入力し直しやすくする
     }
+  }
+
+  // 10問終了後に成績を表示する
+  function showResult() {
+    const percentage = Math.round((correctCount / totalQuestions) * 100);
+    drillEl.hidden = true;
+    resultEl.hidden = false;
+    resultScoreEl.textContent = `${totalQuestions}問中 ${correctCount}問正解！`;
+    resultRateEl.textContent = `正答率 ${percentage}%`;
+    restartBtn.focus();
+  }
+
+  // 成績をリセットして1問目から始める
+  function startDrill() {
+    currentQuestion = 1;
+    correctCount = 0;
+    drillEl.hidden = false;
+    resultEl.hidden = true;
+    newProblem();
   }
 
   submitBtn.addEventListener("click", checkAnswer);
@@ -215,9 +301,13 @@
     if (e.key === "Enter") checkAnswer();
   });
 
-  nextBtn.addEventListener("click", newProblem);
+  nextBtn.addEventListener("click", () => {
+    currentQuestion++;
+    newProblem();
+  });
+  restartBtn.addEventListener("click", startDrill);
 
-  newProblem();
+  startDrill();
 </script>
 </body>
 </html>
