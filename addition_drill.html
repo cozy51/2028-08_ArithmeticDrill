@@ -112,6 +112,10 @@
   .message.correct { color: #2e9e44; }
   .message.wrong   { color: #d9534f; }
 
+  .screen-hidden {
+    display: none !important;
+  }
+
   .result {
     padding-top: 8px;
   }
@@ -178,7 +182,7 @@
       <div class="message" id="message" aria-live="polite"></div>
     </div>
 
-    <div class="result" id="result" hidden>
+    <div class="result screen-hidden" id="result">
       <h2>結果</h2>
       <div class="result-score" id="result-score"></div>
       <div class="result-rate" id="result-rate"></div>
@@ -262,7 +266,7 @@
       answerEl.disabled = true;
       submitBtn.disabled = true;
 
-      if (currentQuestion === totalQuestions) {
+      if (currentQuestion >= totalQuestions) {
         showResult();
       } else {
         nextBtn.disabled = false;
@@ -278,10 +282,10 @@
   // 10問終了後に成績を表示する
   function showResult() {
     const percentage = Math.round((correctCount / totalQuestions) * 100);
-    drillEl.hidden = true;
-    resultEl.hidden = false;
     resultScoreEl.textContent = `${totalQuestions}問中 ${correctCount}問正解！`;
     resultRateEl.textContent = `正答率 ${percentage}%`;
+    drillEl.classList.add("screen-hidden");
+    resultEl.classList.remove("screen-hidden");
     restartBtn.focus();
   }
 
@@ -289,8 +293,8 @@
   function startDrill() {
     currentQuestion = 1;
     correctCount = 0;
-    drillEl.hidden = false;
-    resultEl.hidden = true;
+    drillEl.classList.remove("screen-hidden");
+    resultEl.classList.add("screen-hidden");
     newProblem();
   }
 
