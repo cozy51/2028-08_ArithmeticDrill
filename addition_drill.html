@@ -17,7 +17,8 @@
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: safe center;
+    padding: 24px 0;
     color: #333;
   }
 
@@ -29,6 +30,11 @@
     border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     text-align: center;
+    transition: max-width 0.2s ease;
+  }
+
+  .card.result-mode {
+    max-width: 620px;
   }
 
   h1 {
@@ -138,6 +144,68 @@
     margin-bottom: 28px;
   }
 
+  .history-title {
+    border-top: 1px solid #dce3ea;
+    color: #4a6fa5;
+    font-size: 22px;
+    margin: 8px 0 16px;
+    padding-top: 24px;
+  }
+
+  .history-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .history-item {
+    background: #f7f9fc;
+    border-left: 5px solid #5cb85c;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .history-item.wrong-answer {
+    background: #fff6f5;
+    border-left-color: #d9534f;
+  }
+
+  .history-heading {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .history-question {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .history-judgment {
+    color: #2e9e44;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .wrong-answer .history-judgment {
+    color: #d9534f;
+  }
+
+  .history-answer,
+  .history-reason {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .history-reason {
+    color: #5f4b4b;
+    margin-top: 4px;
+  }
+
   #restart-btn {
     background: #4a6fa5;
     color: #fff;
@@ -166,7 +234,7 @@
 </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="card">
     <h1>足し算・引き算ドリル</h1>
 
     <div id="drill">
@@ -186,6 +254,8 @@
       <h2>結果</h2>
       <div class="result-score" id="result-score"></div>
       <div class="result-rate" id="result-rate"></div>
+      <h3 class="history-title">問題の振り返り</h3>
+      <div class="history-list" id="history-list"></div>
       <button id="restart-btn">もう一度挑戦する</button>
     </div>
   </div>
@@ -194,6 +264,7 @@
   const num1El     = document.getElementById("num1");
   const num2El     = document.getElementById("num2");
   const operatorEl = document.getElementById("operator");
+  const cardEl     = document.getElementById("card");
   const drillEl    = document.getElementById("drill");
   const progressEl = document.getElementById("progress");
   const answerEl   = document.getElementById("answer");
@@ -203,12 +274,15 @@
   const resultEl   = document.getElementById("result");
   const resultScoreEl = document.getElementById("result-score");
   const resultRateEl  = document.getElementById("result-rate");
+  const historyListEl = document.getElementById("history-list");
   const restartBtn = document.getElementById("restart-btn");
 
   const totalQuestions = 10;
   let correctAnswer = 0;
   let currentQuestion = 1;
   let correctCount = 0;
+  let currentProblem = null;
+  let answerHistory = [];
 
   // 1〜10のランダムな整数を返す
   function randomNumber() {
@@ -233,6 +307,13 @@
 
     num1El.textContent = a;
     num2El.textContent = b;
+    currentProblem = {
+      number: currentQuestion,
+      left: a,
+      right: b,
+      operator: operatorEl.textContent,
+      correctAnswer
+    };
     progressEl.textContent = `${currentQuestion} / ${totalQuestions} 問`;
 
     messageEl.textContent = "";
@@ -253,6 +334,13 @@
     if (input === "") return; // 空欄のときは何もしない
 
     const isCorrect = Number(input) === correctAnswer;
+    const userAnswer = Number(input);
+
+    answerHistory.push({
+      ...currentProblem,
+      userAnswer,
+      isCorrect
+    });
 
     if (isCorrect) {
       correctCount++;
@@ -278,15 +366,70 @@
     const percentage = Math.round((correctCount / totalQuestions) * 100);
     resultScoreEl.textContent = `${totalQuestions}問中 ${correctCount}問正解！`;
     resultRateEl.textContent = `正答率 ${percentage}%`;
+    renderHistory();
+    cardEl.classList.add("result-mode");
     drillEl.classList.add("screen-hidden");
     resultEl.classList.remove("screen-hidden");
     restartBtn.focus();
+  }
+
+  // 正しい計算方法と、入力した答えがどれだけ違ったかを説明する
+  function createReasonText(answer) {
+    if (answer.isCorrect) {
+      return "正しく計算できています。";
+    }
+
+    const calculation = answer.operator === "＋"
+      ? `${answer.left}と${answer.right}を足すと${answer.correctAnswer}です。`
+      : `${answer.left}から${answer.right}を引くと${answer.correctAnswer}です。`;
+    const difference = Math.abs(answer.userAnswer - answer.correctAnswer);
+    const comparison = answer.userAnswer > answer.correctAnswer
+      ? `あなたの答えは正解より${difference}大きくなっています。`
+      : `あなたの答えは正解より${difference}小さくなっています。`;
+
+    return `${calculation}${comparison}`;
+  }
+
+  // 全問題の式・回答・正解・振り返りを結果画面に表示する
+  function renderHistory() {
+    historyListEl.replaceChildren();
+
+    answerHistory.forEach((answer) => {
+      const item = document.createElement("div");
+      item.className = `history-item${answer.isCorrect ? "" : " wrong-answer"}`;
+
+      const heading = document.createElement("div");
+      heading.className = "history-heading";
+
+      const question = document.createElement("div");
+      question.className = "history-question";
+      question.textContent = `${answer.number}. ${answer.left} ${answer.operator} ${answer.right} = ${answer.correctAnswer}`;
+
+      const judgment = document.createElement("div");
+      judgment.className = "history-judgment";
+      judgment.textContent = answer.isCorrect ? "正解" : "不正解";
+
+      const submittedAnswer = document.createElement("div");
+      submittedAnswer.className = "history-answer";
+      submittedAnswer.textContent = `あなたの答え：${answer.userAnswer} ／ 正解：${answer.correctAnswer}`;
+
+      const reason = document.createElement("div");
+      reason.className = "history-reason";
+      reason.textContent = createReasonText(answer);
+
+      heading.append(question, judgment);
+      item.append(heading, submittedAnswer, reason);
+      historyListEl.append(item);
+    });
   }
 
   // 成績をリセットして1問目から始める
   function startDrill() {
     currentQuestion = 1;
     correctCount = 0;
+    answerHistory = [];
+    historyListEl.replaceChildren();
+    cardEl.classList.remove("result-mode");
     drillEl.classList.remove("screen-hidden");
     resultEl.classList.add("screen-hidden");
     newProblem();
