@@ -34,7 +34,13 @@
   }
 
   .card.result-mode {
-    max-width: 620px;
+    width: min(96%, 1400px);
+    max-width: 1400px;
+    padding: 24px 28px;
+  }
+
+  .result-mode > h1 {
+    margin-bottom: 8px;
   }
 
   h1 {
@@ -123,47 +129,54 @@
   }
 
   .result {
-    padding-top: 8px;
+    padding-top: 0;
   }
 
   .result h2 {
     color: #4a6fa5;
-    font-size: 28px;
-    margin-bottom: 24px;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .result-summary {
+    align-items: baseline;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 14px;
   }
 
   .result-score {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: bold;
-    margin-bottom: 12px;
   }
 
   .result-rate {
     color: #5f6c7b;
-    font-size: 20px;
-    margin-bottom: 28px;
+    font-size: 17px;
   }
 
   .history-title {
     border-top: 1px solid #dce3ea;
     color: #4a6fa5;
-    font-size: 22px;
-    margin: 8px 0 16px;
-    padding-top: 24px;
+    font-size: 19px;
+    margin: 0 0 10px;
+    padding-top: 12px;
   }
 
   .history-list {
     display: grid;
-    gap: 12px;
-    margin-bottom: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
     text-align: left;
   }
 
   .history-item {
     background: #f7f9fc;
-    border-left: 5px solid #5cb85c;
+    border-left: 4px solid #5cb85c;
     border-radius: 8px;
-    padding: 16px;
+    padding: 10px 12px;
   }
 
   .history-item.wrong-answer {
@@ -176,17 +189,18 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 6px;
+    margin-bottom: 5px;
   }
 
   .history-question {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: bold;
   }
 
   .history-judgment {
     color: #2e9e44;
+    font-size: 14px;
     font-weight: bold;
     white-space: nowrap;
   }
@@ -197,13 +211,13 @@
 
   .history-answer,
   .history-reason {
-    font-size: 16px;
-    line-height: 1.7;
+    font-size: 14px;
+    line-height: 1.45;
   }
 
   .history-reason {
     color: #5f4b4b;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   #restart-btn {
@@ -234,6 +248,22 @@
       padding: 10px 8px;
       font-size: 16px;
     }
+
+    .card.result-mode {
+      padding: 24px 14px;
+    }
+
+    .result-summary {
+      display: block;
+    }
+
+    .result-score {
+      margin-bottom: 4px;
+    }
+
+    .history-list {
+      grid-template-columns: 1fr;
+    }
   }
 
 </style>
@@ -257,8 +287,10 @@
 
     <div class="result screen-hidden" id="result">
       <h2>結果</h2>
-      <div class="result-score" id="result-score"></div>
-      <div class="result-rate" id="result-rate"></div>
+      <div class="result-summary">
+        <div class="result-score" id="result-score"></div>
+        <div class="result-rate" id="result-rate"></div>
+      </div>
       <h3 class="history-title">問題の振り返り</h3>
       <div class="history-list" id="history-list"></div>
       <button id="restart-btn">もう一度挑戦する</button>
