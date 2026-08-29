@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>足し算・引き算ドリル</title>
+<title>四則計算ドリル</title>
 <style>
   * {
     margin: 0;
@@ -216,6 +216,11 @@
       padding: 32px 16px;
     }
 
+    .question {
+      font-size: 40px;
+      letter-spacing: 2px;
+    }
+
     .answer-row {
       grid-template-columns: minmax(72px, 90px) 1fr 1.3fr;
       gap: 8px;
@@ -235,7 +240,7 @@
 </head>
 <body>
   <div class="card" id="card">
-    <h1>足し算・引き算ドリル</h1>
+    <h1>四則計算ドリル</h1>
 
     <div id="drill">
       <div class="progress" id="progress"></div>
@@ -293,18 +298,33 @@
   function newProblem() {
     let a = randomNumber();
     let b = randomNumber();
-    const isAddition = Math.random() < 0.5;
+    const operators = ["＋", "−", "×", "÷"];
+    const operator = operators[Math.floor(Math.random() * operators.length)];
 
-    if (isAddition) {
-      operatorEl.textContent = "＋";
-      correctAnswer = a + b;
-    } else {
-      // 答えがマイナスにならないよう、大きい数を左側にする
-      if (a < b) [a, b] = [b, a];
-      operatorEl.textContent = "−";
-      correctAnswer = a - b;
+    switch (operator) {
+      case "＋":
+        correctAnswer = a + b;
+        break;
+      case "−":
+        // 答えがマイナスにならないよう、大きい数を左側にする
+        if (a < b) [a, b] = [b, a];
+        correctAnswer = a - b;
+        break;
+      case "×":
+        correctAnswer = a * b;
+        break;
+      case "÷": {
+        // 答えと割る数から問題を作り、必ず割り切れるようにする
+        const quotient = a;
+        const divisor = b;
+        a = quotient * divisor;
+        b = divisor;
+        correctAnswer = quotient;
+        break;
+      }
     }
 
+    operatorEl.textContent = operator;
     num1El.textContent = a;
     num2El.textContent = b;
     currentProblem = {
@@ -379,9 +399,13 @@
       return "正しく計算できています。";
     }
 
-    const calculation = answer.operator === "＋"
-      ? `${answer.left}と${answer.right}を足すと${answer.correctAnswer}です。`
-      : `${answer.left}から${answer.right}を引くと${answer.correctAnswer}です。`;
+    const calculationTexts = {
+      "＋": `${answer.left}と${answer.right}を足すと${answer.correctAnswer}です。`,
+      "−": `${answer.left}から${answer.right}を引くと${answer.correctAnswer}です。`,
+      "×": `${answer.left}に${answer.right}をかけると${answer.correctAnswer}です。`,
+      "÷": `${answer.left}を${answer.right}で割ると${answer.correctAnswer}です。`
+    };
+    const calculation = calculationTexts[answer.operator];
     const difference = Math.abs(answer.userAnswer - answer.correctAnswer);
     const comparison = answer.userAnswer > answer.correctAnswer
       ? `あなたの答えは正解より${difference}大きくなっています。`
