@@ -173,13 +173,13 @@
       <div class="progress" id="progress"></div>
       <div class="question"><span id="num1"></span> <span id="operator"></span> <span id="num2"></span> = ？</div>
 
+      <div class="message" id="message" aria-live="polite"></div>
+
       <div class="answer-row">
         <input type="number" id="answer" inputmode="numeric" placeholder="答え" aria-label="答え">
         <button id="submit-btn">答える</button>
         <button id="next-btn" disabled>次の問題</button>
       </div>
-
-      <div class="message" id="message" aria-live="polite"></div>
     </div>
 
     <div class="result screen-hidden" id="result">
@@ -209,7 +209,6 @@
   let correctAnswer = 0;
   let currentQuestion = 1;
   let correctCount = 0;
-  let isFirstAttempt = true;
 
   // 1〜10のランダムな整数を返す
   function randomNumber() {
@@ -235,7 +234,6 @@
     num1El.textContent = a;
     num2El.textContent = b;
     progressEl.textContent = `${currentQuestion} / ${totalQuestions} 問`;
-    isFirstAttempt = true;
 
     messageEl.textContent = "";
     messageEl.className = "message";
@@ -244,6 +242,7 @@
     answerEl.disabled = false;
     submitBtn.disabled = false;
     nextBtn.disabled = true;
+    nextBtn.textContent = "次の問題";
 
     answerEl.focus();
   }
@@ -255,28 +254,23 @@
 
     const isCorrect = Number(input) === correctAnswer;
 
-    if (isFirstAttempt) {
-      if (isCorrect) correctCount++;
-      isFirstAttempt = false;
-    }
-
     if (isCorrect) {
+      correctCount++;
       messageEl.textContent = "正解！";
       messageEl.className = "message correct";
-      answerEl.disabled = true;
-      submitBtn.disabled = true;
-
-      if (currentQuestion >= totalQuestions) {
-        showResult();
-      } else {
-        nextBtn.disabled = false;
-        nextBtn.focus();
-      }
     } else {
-      messageEl.textContent = "もう一度";
+      messageEl.textContent = `不正解。正解は${correctAnswer}です。`;
       messageEl.className = "message wrong";
-      answerEl.select(); // 入力し直しやすくする
     }
+
+    // 正誤を確認してから次へ進めるよう、回答を確定する
+    answerEl.disabled = true;
+    submitBtn.disabled = true;
+    nextBtn.disabled = false;
+    if (currentQuestion >= totalQuestions) {
+      nextBtn.textContent = "結果を見る";
+    }
+    nextBtn.focus();
   }
 
   // 10問終了後に成績を表示する
@@ -306,8 +300,12 @@
   });
 
   nextBtn.addEventListener("click", () => {
-    currentQuestion++;
-    newProblem();
+    if (currentQuestion >= totalQuestions) {
+      showResult();
+    } else {
+      currentQuestion++;
+      newProblem();
+    }
   });
   restartBtn.addEventListener("click", startDrill);
 
